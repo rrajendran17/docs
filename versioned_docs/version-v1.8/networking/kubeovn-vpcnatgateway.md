@@ -54,7 +54,7 @@ spec:
 #### Create a network attachment definition (external network)
 
 ```
-kubectl get net-attach-def vswitchexternal1 -o yaml
+$ kubectl get net-attach-def vswitchexternal1 -o yaml
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
@@ -144,7 +144,7 @@ spec:
 #### Verify if a new vpcnatgw statefulset and a pod created
 
 ```
-kubectl get statefulset -n kube-system vpc-nat-gw-gw1 -o yaml
+$ kubectl get statefulset -n kube-system vpc-nat-gw-gw1 -o yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -229,7 +229,7 @@ status:
   updatedReplicas: 1
 ```
 ```
-kubectl describe pod vpc-nat-gw-gw1-0 -n kube-system
+$ kubectl describe pod vpc-nat-gw-gw1-0 -n kube-system
 Name:             vpc-nat-gw-gw1-0
 Namespace:        kube-system
 Priority:         0
@@ -350,7 +350,7 @@ Events:                      <none>
 #### Check the vpc nat gw pod for interfaces (net1 attached to internal network, net2 attached to external network)
 
 ```
-kubectl exec -it vpc-nat-gw-gw1-0 -n kube-system -- /bin/bash
+$ kubectl exec -it vpc-nat-gw-gw1-0 -n kube-system -- /bin/bash
 vpc-nat-gw-gw1-0:/kube-ovn# ip addr show
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
@@ -434,7 +434,7 @@ spec:
 #### Verify provider network bridge (br-pn1) and external subnet attached on the ovs (patch-localnet.externalsubnet-to-br-int)
 
 ```
-kubectl exec -it ovs-ovn-q92zk -n kube-system -- /bin/bash
+$ kubectl exec -it ovs-ovn-q92zk -n kube-system -- /bin/bash
 Defaulted container "openvswitch" out of: openvswitch, hostpath-init (init)
 nobody@hp-65:/kube-ovn$ ovs-vsctl show
 54ef5649-9fe6-4944-865b-30a591c95121
@@ -501,13 +501,13 @@ spec:
 
 #####  Verify EIP status
 ```
-kubectl get eip
+$ kubectl get eip
 NAME     IP              MAC                 NAT         NATGWDP   READY
 my-eip   10.115.55.200   52:1b:4f:1d:14:ce   dnat,snat   gw1       true
 
 ```
 
-##### Verify SNAT filter iptable rule created inside the VPC NAT gateway pod
+##### Verify SNAT rule created inside the VPC NAT gateway pod
 
 ```
 vpc-nat-gw-gw1-0:/kube-ovn# iptables-legacy-save -t nat
@@ -538,7 +538,7 @@ COMMIT
 ip route add default via 172.20.10.254 dev enp1s0 
 ```
     
-Ping from VM (inside guest os) to 8.8.8.8 must be successful
+PPing from VM (inside guest os) to any IP address external to the cluster, such as 8.8.8.8 must be successful
 The traffic from VM reaches net1 of vpc nat gw pod and with route installed egress out of net2 and hits the iptable rule for SNAT and translates 172.20.10.0/24 subnet ip to 10.115.55.200 for external connectivity.
 
 ![](/img/kubeovnSNATFlow.png)
@@ -561,7 +561,7 @@ spec:
   protocol: tcp
 
 ```
-##### Check the DNAT Filter inside the vpc NAT GW pod
+##### Check the DNAT rule inside the vpc NAT GW pod
 
 ```
 vpc-nat-gw-gw1-0:/kube-ovn# iptables-legacy -t nat -L -n -v 2>/dev/null | grep -E "DNAT"
@@ -577,12 +577,12 @@ Chain SHARED_DNAT (1 references)
 
 ##### Create a VM attached to overlay network on subnetinternal and Install nginx on VM to check inbound access
 ```
-sudo apt update
-sudo apt install nginx -y
-sudo systemctl status nginx
+$ sudo apt update
+$ sudo apt install nginx -y
+$ sudo systemctl status nginx
 
 test nginx locally on the VM
-curl http://127.0.0.1
+$ curl http://127.0.0.1
 
 Now curl -k http://10.115.55.200:8888 from external must be successful
 ```
